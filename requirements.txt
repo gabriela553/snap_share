@@ -1,0 +1,5 @@
+django==5.1.1
+Pillow==10.4.0
+ruff
+ipdb
+black

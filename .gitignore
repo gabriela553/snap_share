@@ -1,0 +1,21 @@
+# Python
+*.pyc
+__pycache__/
+
+# Django
+*.log
+*.pot
+*.pyc
+__pycache__/
+db.sqlite3
+media/
+
+# Environments
+.env
+ENV/
+
+# PyCharm
+.idea/
+
+# Windows
+Thumbs.db
