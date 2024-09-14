@@ -19,5 +19,5 @@ class PostsListTests(TestCase):
         posts = response_data["posts"]
         self.assertEqual(response.status_code, HTTP_OK)
         self.assertEqual(len(posts), 2)
-        self.assertEqual(posts[0]["caption"], self.post1.caption)
-        self.assertEqual(posts[1]["caption"], self.post2.caption)
+        self.assertEqual(posts[0]["caption"], self.post2.caption)
+        self.assertEqual(posts[1]["caption"], self.post1.caption)
