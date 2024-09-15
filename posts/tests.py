@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
-from .models import Post
+from .models import Comment, Post
 
 HTTP_OK = 200
 
@@ -15,8 +15,7 @@ class PostsListTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username="testuser",
-            password="testpassword",
+            username="testuser", password="testpassword",
         )
         self.client.force_authenticate(user=self.user)
         self.post1 = Post.objects.create(
@@ -47,7 +46,9 @@ class PostsListTests(TestCase):
 
 class PostCreateViewTest(APITestCase):
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword",
+        )
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
         self.url = "/api/add/"
@@ -76,3 +77,37 @@ class PostCreateViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(Post.objects.count(), 0)
+
+
+class CommentCreateViewTest(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser", password="testpassword",
+        )
+        self.post = Post.objects.create(
+            image="\\posts\\test_image1.png",
+            caption="The content of the first post",
+            author=self.user,
+        )
+        self.url = "/api/comments/"
+
+    def test_create_comment_authenticated(self):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            "post": self.post.id,
+            "content": "This is a test comment.",
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Comment.objects.count(), 1)
+        self.assertEqual(Comment.objects.get().content, "This is a test comment.")
+        self.assertEqual(Comment.objects.get().author, self.user)
+
+    def test_create_comment_unauthenticated(self):
+        data = {
+            "post": self.post.id,
+            "content": "This is a test comment.",
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Comment.objects.count(), 0)
