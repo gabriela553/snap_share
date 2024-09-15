@@ -4,8 +4,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import Post
-from .serializers import CommentSerializer, PostSerializer
+from .models import Like, Post
+from .serializers import CommentSerializer, LikeSerializer, PostSerializer
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -34,3 +34,31 @@ class CommentCreateView(APIView):
             serializer.save(author=request.user)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class LikeCreateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        post_id = request.data.get("post")
+        if not post_id:
+            return Response(
+                {"detail": "Post ID is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            post = Post.objects.get(id=post_id)
+        except Post.DoesNotExist:
+            return Response(
+                {"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if Like.objects.filter(post=post, user=request.user).exists():
+            return Response(
+                {"detail": "You have already liked this post."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        like = Like.objects.create(post=post, user=request.user)
+        serializer = LikeSerializer(like)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
