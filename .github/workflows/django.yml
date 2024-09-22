@@ -44,7 +44,7 @@ jobs:
 
 
     - name: Execute tests in the running services
-      run: docker-compose exec web python manage.py test
+      run: docker-compose exec -T web python manage.py test
 
     - name: Stop and remove Docker containers
       if: always()
