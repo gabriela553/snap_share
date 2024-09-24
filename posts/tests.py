@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
-from .models import Comment, Post
+from .models import Comment, Like, Post
 
 HTTP_OK = 200
 
@@ -15,7 +15,8 @@ class PostsListTests(TestCase):
     def setUp(self):
         self.client = APIClient()
         self.user = User.objects.create_user(
-            username="testuser", password="testpassword",
+            username="testuser",
+            password="testpassword",
         )
         self.client.force_authenticate(user=self.user)
         self.post1 = Post.objects.create(
@@ -47,7 +48,8 @@ class PostsListTests(TestCase):
 class PostCreateViewTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser", password="testpassword",
+            username="testuser",
+            password="testpassword",
         )
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
@@ -82,7 +84,8 @@ class PostCreateViewTest(APITestCase):
 class CommentCreateViewTest(APITestCase):
     def setUp(self):
         self.user = User.objects.create_user(
-            username="testuser", password="testpassword",
+            username="testuser",
+            password="testpassword",
         )
         self.post = Post.objects.create(
             image="\\posts\\test_image1.png",
@@ -111,3 +114,48 @@ class CommentCreateViewTest(APITestCase):
         response = self.client.post(self.url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(Comment.objects.count(), 0)
+
+
+class LikeCreateViewTest(APITestCase):
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username="testuser",
+            password="testpassword",
+        )
+        self.post = Post.objects.create(
+            image="\\posts\\test_image1.png",
+            caption="The content of the first post",
+            author=self.user,
+        )
+        self.url = "/api/likes/"
+
+    def test_create_like_authenticated(self):
+        self.client.force_authenticate(user=self.user)
+        data = {
+            "post": self.post.id,
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Like.objects.count(), 1)
+        self.assertEqual(Like.objects.get().post, self.post)
+        self.assertEqual(Like.objects.get().user, self.user)
+
+    def test_create_like_already_exists(self):
+        self.client.force_authenticate(user=self.user)
+        Like.objects.create(post=self.post, user=self.user)
+        data = {
+            "post": self.post.id,
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(response.data["detail"], "You have already liked this post.")
+        self.assertEqual(Like.objects.count(), 1)
+
+    def test_create_like_unauthenticated(self):
+        data = {
+            "post": self.post.id,
+        }
+        response = self.client.post(self.url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        self.assertEqual(Like.objects.count(), 0)
