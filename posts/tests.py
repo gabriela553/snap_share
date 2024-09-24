@@ -1,14 +1,15 @@
 import time
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
 
-from .models import Comment, Like, Post
+from .models import Comment, Like, Post, Tag
 
 HTTP_OK = 200
+User = get_user_model()
 
 
 class PostsListTests(TestCase):
@@ -79,6 +80,21 @@ class PostCreateViewTest(APITestCase):
 
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
         self.assertEqual(Post.objects.count(), 0)
+
+    def test_create_post_with_tags(self):
+        self.client.force_authenticate(user=self.user)
+
+        with open("media/posts/test_image1.png", "rb") as img_file:
+            data = {
+                "caption": "Test post authenticated",
+                "image": img_file,
+                "tag_names": ["test", "tag"],
+            }
+            response = self.client.post(self.url, data, format="multipart")
+
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(Post.objects.count(), 1)
+        self.assertEqual(Tag.objects.count(), 2)
 
 
 class CommentCreateViewTest(APITestCase):
