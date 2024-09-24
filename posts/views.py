@@ -1,11 +1,9 @@
-from django.shortcuts import redirect, render
-from django.http import JsonResponse
+from rest_framework import viewsets
 
 from .models import Post
+from .serializers import PostSerializer
 
 
-def post_list(request):
-    posts = Post.objects.all().order_by("-created_at")
-    posts_data = [{"id": post.id, "caption": post.caption, "author": post.author.username} for post in posts]
-    return JsonResponse({"posts": posts_data})
-
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all().order_by("-created_at")
+    serializer_class = PostSerializer
