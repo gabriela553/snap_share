@@ -3,12 +3,11 @@ import time
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient, APITestCase
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
 from .models import Comment, Like, Post, Tag
 
-HTTP_OK = 200
 User = get_user_model()
 
 
@@ -19,7 +18,11 @@ class PostsListTests(TestCase):
             username="testuser",
             password="testpassword",
         )
-        self.client.force_authenticate(user=self.user)
+
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
+
         self.post1 = Post.objects.create(
             image="\\posts\\test_image1.png",
             caption="The content of the first post",
@@ -40,7 +43,7 @@ class PostsListTests(TestCase):
         response = self.client.get("/api/posts/")
         response_data = response.json()
 
-        self.assertEqual(response.status_code, HTTP_OK)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response_data["results"]), 2)
         self.assertEqual(response_data["results"][0]["caption"], self.post2.caption)
         self.assertEqual(response_data["results"][1]["caption"], self.post1.caption)
@@ -52,17 +55,16 @@ class PostCreateViewTest(APITestCase):
             username="testuser",
             password="testpassword",
         )
-        self.token = Token.objects.create(user=self.user)
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
+        refresh = RefreshToken.for_user(self.user)
+        self.access_token = str(refresh.access_token)
+        self.client.credentials(HTTP_AUTHORIZATION="Bearer " + self.access_token)
         self.url = "/api/posts/"
 
     def tearDown(self):
         Post.objects.all().delete()
-        Token.objects.all().delete()
         User.objects.all().delete()
 
     def test_create_post_authenticated(self):
-        self.client.force_authenticate(user=self.user)
         with open("media/posts/test_image1.png", "rb") as img_file:
             data = {"caption": "Test post authenticated", "image": img_file}
             response = self.client.post(self.url, data, format="multipart")
@@ -82,8 +84,6 @@ class PostCreateViewTest(APITestCase):
         self.assertEqual(Post.objects.count(), 0)
 
     def test_create_post_with_tags(self):
-        self.client.force_authenticate(user=self.user)
-
         with open("media/posts/test_image1.png", "rb") as img_file:
             data = {
                 "caption": "Test post authenticated",
@@ -111,7 +111,8 @@ class CommentCreateViewTest(APITestCase):
         self.url = "/api/comments/"
 
     def test_create_comment_authenticated(self):
-        self.client.force_authenticate(user=self.user)
+        self.token = AccessToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
         data = {
             "post": self.post.id,
             "content": "This is a test comment.",
@@ -139,6 +140,8 @@ class LikeCreateViewTest(APITestCase):
             username="testuser",
             password="testpassword",
         )
+        self.token = AccessToken.for_user(self.user)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {self.token}")
         self.post = Post.objects.create(
             image="\\posts\\test_image1.png",
             caption="The content of the first post",
@@ -169,6 +172,7 @@ class LikeCreateViewTest(APITestCase):
         self.assertEqual(Like.objects.count(), 1)
 
     def test_create_like_unauthenticated(self):
+        self.client.credentials()
         data = {
             "post": self.post.id,
         }
