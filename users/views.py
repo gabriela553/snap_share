@@ -3,6 +3,7 @@ from rest_framework import generics, status
 from rest_framework.authtoken.models import Token
 from rest_framework.authtoken.views import ObtainAuthToken
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -19,7 +20,7 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = UserRegisterSerializer
     permission_classes = [AllowAny]
 
-    def create(self, request, *args, **kwargs):
+    def create(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
@@ -38,7 +39,7 @@ class RegisterView(generics.CreateAPIView):
 
 class CustomAuthToken(ObtainAuthToken):
 
-    def post(self, request, *args, **kwargs):
+    def post(self, request: Request) -> Response:
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data["user"]
@@ -54,7 +55,7 @@ class CustomAuthToken(ObtainAuthToken):
 
 class LogoutView(APIView):
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         request.user.auth_token.delete()
         logout(request)
         return Response(status=status.HTTP_200_OK)
