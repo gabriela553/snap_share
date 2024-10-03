@@ -5,3 +5,4 @@ ipdb
 black
 djangorestframework
 psycopg2
+djangorestframework-simplejwt

@@ -3,7 +3,6 @@ import json
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.authtoken.models import Token
 from rest_framework.test import APITestCase
 
 User = get_user_model()
@@ -92,8 +91,7 @@ class UserAuthTests(APITestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(username="testuser", password="testpass")
-        self.login_url = reverse("login")
-        self.logout_url = reverse("logout")
+        self.login_url = reverse("token_obtain_pair")
 
     def test_login(self):
         data = {
@@ -102,11 +100,5 @@ class UserAuthTests(APITestCase):
         }
         response = self.client.post(self.login_url, data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("token", response.data)
-
-    def test_logout(self):
-        token = Token.objects.create(user=self.user)
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + token.key)
-
-        response = self.client.post(self.logout_url)
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn("access", response.data)
+        self.assertIn("refresh", response.data)
