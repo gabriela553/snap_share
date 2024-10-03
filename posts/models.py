@@ -5,7 +5,7 @@ from django.db import models
 class Tag(models.Model):
     name = models.CharField(max_length=50, unique=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -20,7 +20,7 @@ class Post(models.Model):
     )
     tags = models.ManyToManyField(Tag, related_name="posts", blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.caption
 
 
@@ -34,7 +34,7 @@ class Comment(models.Model):
         related_name="comments",
     )
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f'Comment by {self.author.username} on {self.created_at.strftime
         ("%Y-%m-%d %H:%M:%S")}: {self.content[:50]}'
 
@@ -51,5 +51,5 @@ class Like(models.Model):
     class Meta:
         unique_together = ("post", "user")
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Like by {self.user.username} on post {self.post.id}"

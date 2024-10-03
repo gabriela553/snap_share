@@ -1,6 +1,7 @@
-from rest_framework import status, viewsets
+from rest_framework import serializers, status, viewsets
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.request import Request
 from rest_framework.response import Response
 
 from .models import Comment, Like, Post
@@ -18,7 +19,7 @@ class PostViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: serializers.Serializer) -> None:
         serializer.save(author=self.request.user)
 
 
@@ -27,7 +28,7 @@ class CommentCreateView(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = [IsAuthenticated]
 
-    def perform_create(self, serializer):
+    def perform_create(self, serializer: serializers.Serializer) -> None:
         serializer.save(author=self.request.user)
 
 
@@ -36,7 +37,7 @@ class LikeCreateView(viewsets.ModelViewSet):
     serializer_clas = LikeSerializer
     permission_classes = [IsAuthenticated]
 
-    def create(self, request):
+    def create(self, request: Request) -> Response:
         post_id = request.data.get("post")
         if not post_id:
             return Response(

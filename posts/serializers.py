@@ -22,7 +22,7 @@ class PostSerializer(serializers.ModelSerializer):
         fields = ["id", "image", "caption", "created_at", "author", "tags", "tag_names"]
         read_only_fields = ["author"]
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> Post:
         tag_names = validated_data.pop("tag_names", [])
         post = Post.objects.create(**validated_data)
 

@@ -35,14 +35,14 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = ["username", "email", "password1", "password2"]
 
-    def validate(self, attrs):
+    def validate(self, attrs: dict) -> dict:
         if attrs["password1"] != attrs["password2"]:
             raise serializers.ValidationError(
                 {"password": "Hasła muszą być identyczne."},
             )
         return attrs
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> User:
         user = User(
             username=validated_data["username"],
             email=validated_data["email"],

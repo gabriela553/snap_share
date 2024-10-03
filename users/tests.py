@@ -9,16 +9,20 @@ User = get_user_model()
 
 
 class UserRegistrationTests(APITestCase):
+    TEST_PASSWORD = "existing_password"
 
-    def setUp(self):
+    def setUp(self) -> None:
         self.existing_user = User.objects.create_user(
             username="existing_user",
             email="existing@example.com",
-            password="existing_password",
+            password=self.TEST_PASSWORD,
         )
         self.register_url = reverse("register")
 
-    def test_register_success(self):
+    def tearDown(self) -> None:
+        self.existing_user.delete()
+
+    def test_register_success(self) -> None:
         data = {
             "username": "new_user",
             "email": "newuser@example.com",
@@ -37,7 +41,7 @@ class UserRegistrationTests(APITestCase):
             "newuser@example.com",
         )
 
-    def test_register_passwords_do_not_match(self):
+    def test_register_passwords_do_not_match(self) -> None:
         data = {
             "username": "new_user",
             "email": "newuser@example.com",
@@ -52,7 +56,7 @@ class UserRegistrationTests(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn("password", response.data)
 
-    def test_register_email_already_exists(self):
+    def test_register_email_already_exists(self) -> None:
         data = {
             "username": "another_user",
             "email": "existing@example.com",
@@ -71,7 +75,7 @@ class UserRegistrationTests(APITestCase):
             "Konto dla tego adresu email już istnieje.",
         )
 
-    def test_register_invalid_email_format(self):
+    def test_register_invalid_email_format(self) -> None:
         data = {
             "username": "user_invalid_email",
             "email": "invalid-email-format",
@@ -88,12 +92,19 @@ class UserRegistrationTests(APITestCase):
 
 
 class UserAuthTests(APITestCase):
+    TEST_PASSWORD = "testpass"
 
-    def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass")
+    def setUp(self) -> None:
+        self.user = User.objects.create_user(
+            username="testuser",
+            password=self.TEST_PASSWORD,
+        )
         self.login_url = reverse("token_obtain_pair")
 
-    def test_login(self):
+    def tearDown(self) -> None:
+        self.user.delete()
+
+    def test_login(self) -> None:
         data = {
             "username": "testuser",
             "password": "testpass",
