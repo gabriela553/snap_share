@@ -54,7 +54,7 @@ class PostCreateViewTest(APITestCase):
         )
         self.token = Token.objects.create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION="Token " + self.token.key)
-        self.url = "/api/add/"
+        self.url = "/api/posts/"
 
     def tearDown(self):
         Post.objects.all().delete()
