@@ -13,6 +13,13 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+
+    - name: Set up environment variables
+      run: |
+        echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+        echo "POSTGRES_DB=snap-share" >> $GITHUB_ENV
+        echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
+        
     - name: Install Ruff
       run: |
         pip install ruff
@@ -38,10 +45,6 @@ jobs:
       uses: hoverkraft-tech/compose-action@v2.0.1
       with:
         compose-file: "./docker-compose.yml"
-      env:
-        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-        POSTGRES_DB: snap-share
-        POSTGRES_USER: postgres
     
     - name: Wait for services to be ready
       run: sleep 30  
