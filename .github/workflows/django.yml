@@ -45,10 +45,13 @@ jobs:
       uses: hoverkraft-tech/compose-action@v2.0.1
       with:
         compose-file: "./docker-compose.yml"
-    
+      env:
+        POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+        POSTGRES_DB: snap-share
+        POSTGRES_USER: postgres
+
     - name: Wait for services to be ready
       run: sleep 30  
-
 
     - name: Execute tests in the running services
       run: docker-compose exec -T web python manage.py test
@@ -56,3 +59,4 @@ jobs:
     - name: Stop and remove Docker containers
       if: always()
       run: docker-compose down
+
